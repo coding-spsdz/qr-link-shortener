@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفعيل بطاقة QR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        
+        .message {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .redirect-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .redirect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .countdown {
+            margin-top: 20px;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">QR</div>
+        <h1>تفعيل بطاقة QR</h1>
+        <p class="message">
+            لم يتم تفعيل هذه البطاقة بعد.<br>
+            سيتم توجيهك إلى صفحة التفعيل لربط البطاقة بالرابط المطلوب.
+        </p>
+        
+        <a href="/activate" class="redirect-btn" id="redirectBtn">
+            انتقال إلى صفحة التفعيل
+            <span class="loading" style="display: none;"></span>
+        </a>
+        
+        <div class="countdown">
+            سيتم التوجيه التلقائي خلال <span id="timer">5</span> ثوانٍ
+        </div>
+    </div>
+
+    <script>
+        // استخراج الكود من الرابط
+        const pathCode = window.location.pathname.split('/').pop();
+        
+        // إذا كان هناك كود في الرابط، أضفه كمعامل في صفحة التفعيل
+        const activateUrl = pathCode && pathCode.length >= 3 ? 
+            /activate?code=${pathCode} : '/activate';
+        
+        // تحديث رابط الزر
+        document.getElementById('redirectBtn').href = activateUrl;
+        
+        // العد التنازلي للتوجيه التلقائي
+        let countdown = 5;
+        const timerElement = document.getElementById('timer');
+        const redirectBtn = document.getElementById('redirectBtn');
+        
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            timerElement.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                redirectBtn.innerHTML = 'جاري التوجيه... <span class="loading"></span>';
+                document.querySelector('.loading').style.display = 'inline-block';
+                
+                setTimeout(() => {
+                    window.location.href = activateUrl;
+                }, 500);
+            }
+        }, 1000);
+        
+        // منع التوجيه التلقائي عند النقر على الزر
+        redirectBtn.addEventListener('click', () => {
+            clearInterval(countdownInterval);
+        });
+    </script>
+</body>
+</html>
