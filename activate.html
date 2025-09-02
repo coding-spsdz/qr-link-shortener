@@ -92,6 +92,30 @@
             cursor: not-allowed;
         }
         
+        .scan-btn {
+            width: 100%;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .scan-btn:hover:not(:disabled) {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .scan-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         .submit-btn {
             width: 100%;
             background: linear-gradient(45deg, #667eea, #764ba2);
@@ -161,28 +185,29 @@
             border: 1px solid #cfc;
         }
         
-        .scan-btn {
-            width: 100%;
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px;
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .attempts-info {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px 15px;
             border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .scan-btn:hover {
-            background: #218838;
-            transform: translateY(-1px);
-        }
-        
-        .scan-btn:disabled {
-            background: #6c757d;
-            cursor: not-allowed;
-            transform: none;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #667eea;
         }
         
         .qr-scanner {
@@ -240,20 +265,6 @@
         
         .close-scanner:hover {
             background: #c82333;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .attempts-info {
-            background: rgba(102, 126, 234, 0.1);
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #667eea;
         }
         
         @media (max-width: 600px) {
@@ -343,7 +354,9 @@
                 scannerTitle: "مسح QR Code",
                 closeScannerBtn: "إغلاق",
                 successMsg: "تم تفعيل البطاقة بنجاح!",
+                successUpdate: "تم تحديث البطاقة بنجاح!",
                 attemptsText: "المحاولات المتبقية:",
+                qrScanned: "تم مسح QR Code بنجاح!",
                 errors: {
                     invalidCode: "كود البطاقة غير صحيح (3-25 حرف، أرقام وحروف فقط)",
                     invalidUrl: "الرجاء إدخال رابط صحيح",
@@ -367,7 +380,9 @@
                 scannerTitle: "Scan QR Code",
                 closeScannerBtn: "Close",
                 successMsg: "Card activated successfully!",
+                successUpdate: "Card updated successfully!",
                 attemptsText: "Remaining attempts:",
+                qrScanned: "QR Code scanned successfully!",
                 errors: {
                     invalidCode: "Invalid card code (3-25 characters, letters and numbers only)",
                     invalidUrl: "Please enter a valid URL",
@@ -391,7 +406,9 @@
                 scannerTitle: "Scanner QR Code",
                 closeScannerBtn: "Fermer",
                 successMsg: "Carte activée avec succès!",
+                successUpdate: "Carte mise à jour avec succès!",
                 attemptsText: "Tentatives restantes:",
+                qrScanned: "QR Code scanné avec succès!",
                 errors: {
                     invalidCode: "Code de carte invalide (3-25 caractères, lettres et chiffres uniquement)",
                     invalidUrl: "Veuillez entrer une URL valide",
@@ -405,6 +422,8 @@
 
         let currentLang = 'fr'; // اللغة الافتراضية فرنسية
         let attempts = 10;
+        let qrScanner = null;
+        let videoStream = null;
 
         // تحديد اللغة تلقائياً حسب الجهاز
         function detectLanguage() {
@@ -499,10 +518,6 @@
             }
         }
 
-        // متغيرات ماسح QR
-        let qrScanner = null;
-        let videoStream = null;
-
         // بدء مسح QR
         async function startQRScan() {
             const t = translations[currentLang];
@@ -537,7 +552,7 @@
                     if (validateCode(code)) {
                         document.getElementById('qrCode').value = code;
                         stopQRScan();
-                        showMessage('تم مسح QR Code بنجاح!', 'success');
+                        showMessage(t.qrScanned, 'success');
                     } else {
                         showMessage(t.errors.noQRFound, 'error');
                     }
@@ -578,6 +593,8 @@
             scanBtn.disabled = false;
             scanBtnText.textContent = t.scanBtnText;
         }
+
+        // معالجة النموذج
         async function handleSubmit(event) {
             event.preventDefault();
             
@@ -587,13 +604,7 @@
             const qrCode = document.getElementById('qrCode').value.trim();
             const destinationUrl = document.getElementById('destinationUrl').value.trim();
 
-            // التحقق من المحاولات
-            if (attempts <= 0) {
-                showMessage(t.errors.maxAttempts, 'error');
-                return;
-            }
-
-            // التحقق من البيانات
+            // التحقق من البيانات محلياً
             if (!validateCode(qrCode)) {
                 showMessage(t.errors.invalidCode, 'error');
                 return;
@@ -609,20 +620,47 @@
             btnText.innerHTML = `${t.btnLoading} <span class="loading"></span>`;
 
             try {
-                // هنا سيتم إضافة الكود للاتصال بـ Supabase لاحقاً
-                // محاكاة العملية للآن
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                showMessage(t.successMsg, 'success');
-                attempts--;
-                updateAttemptsDisplay();
-                
-                // إعادة تعيين النموذج
-                document.getElementById('destinationUrl').value = '';
+                // إرسال البيانات إلى API
+                const response = await fetch('/.netlify/functions/links', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        shortCode: qrCode,
+                        destinationUrl: destinationUrl
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const message = result.action === 'created' ? t.successMsg : t.successUpdate;
+                    showMessage(message, 'success');
+                    
+                    // تحديث المحاولات المتبقية
+                    attempts = result.remaining;
+                    updateAttemptsDisplay();
+                    
+                    // إعادة تعيين النموذج
+                    document.getElementById('destinationUrl').value = '';
+                    document.getElementById('qrCode').value = '';
+                    
+                } else {
+                    if (response.status === 429) {
+                        showMessage(t.errors.maxAttempts, 'error');
+                        attempts = 0;
+                    } else {
+                        showMessage(result.error || t.errors.networkError, 'error');
+                        attempts = result.remaining || attempts - 1;
+                    }
+                    updateAttemptsDisplay();
+                }
                 
             } catch (error) {
+                console.error('خطأ في API:', error);
                 showMessage(t.errors.networkError, 'error');
-                attempts--;
+                attempts = Math.max(0, attempts - 1);
                 updateAttemptsDisplay();
             } finally {
                 submitBtn.disabled = false;
@@ -630,46 +668,27 @@
             }
         }
 
-        // تهيئة الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
-            detectLanguage();
-            
-            const codeFromUrl = getCodeFromUrl();
-            if (codeFromUrl) {
-                document.getElementById('qrCode').value = codeFromUrl;
-            }
-            
-            // ربط النموذج
-            document.getElementById('activationForm').addEventListener('submit', handleSubmit);
-            
-            // السماح بتعديل حقل الكود إذا لم يكن هناك كود في الرابط
-            if (!codeFromUrl) {
-                document.getElementById('qrCode').removeAttribute('readonly');
-            }
-        });
+        // إضافة استدعاء loadRemainingAttempts في تهيئة الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    detectLanguage();
+    loadRemainingAttempts(); // إضافة هذا السطر
+    
+    const codeFromUrl = getCodeFromUrl();
+    if (codeFromUrl) {
+        document.getElementById('qrCode').value = codeFromUrl;
+    }
+    
+    document.getElementById('activationForm').addEventListener('submit', handleSubmit);
+    
+    if (!codeFromUrl) {
+        document.getElementById('qrCode').removeAttribute('readonly');
+    }
+});
 
-        // محاكاة مسح QR (للاختبار)
-        function simulateQRScan() {
-            const testCode = 'Av7Hd7588Bdh8885vdb';
-            document.getElementById('qrCode').value = testCode;
-            document.getElementById('qrCode').setAttribute('readonly', true);
-        }
+        
 
-        // إضافة زر اختبار (مؤقت للتطوير)
-        if (window.location.hostname === 'localhost' || window.location.hostname.includes('codespaces')) {
-            const testBtn = document.createElement('button');
-            testBtn.textContent = 'Test QR Scan';
-            testBtn.style.position = 'fixed';
-            testBtn.style.bottom = '20px';
-            testBtn.style.left = '20px';
-            testBtn.style.padding = '10px';
-            testBtn.style.background = '#28a745';
-            testBtn.style.color = 'white';
-            testBtn.style.border = 'none';
-            testBtn.style.borderRadius = '5px';
-            testBtn.onclick = simulateQRScan;
-            document.body.appendChild(testBtn);
-        }
+
+        
     </script>
 </body>
 </html>
