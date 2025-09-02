@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفعيل بطاقة QR</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        input[type="text"]:focus, input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        input:disabled {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .lang-btn {
+            padding: 8px 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .lang-btn.active {
+            background: white;
+            color: #667eea;
+        }
+        
+        .error, .success {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .success {
+            background: #efe;
+            color: #363;
+            border: 1px solid #cfc;
+        }
+        
+        .scan-btn {
+            width: 100%;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .scan-btn:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+        
+        .scan-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .qr-scanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            z-index: 1000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .scanner-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .scanner-video {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        
+        .scanner-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .scanner-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .close-scanner {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .close-scanner:hover {
+            background: #c82333;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .attempts-info {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #667eea;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                padding: 25px 20px;
+            }
+            
+            .language-selector {
+                position: relative;
+                top: 0;
+                right: 0;
+                justify-content: center;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="language-selector">
+        <button class="lang-btn active" onclick="setLanguage('ar')">عربي</button>
+        <button class="lang-btn" onclick="setLanguage('en')">English</button>
+        <button class="lang-btn" onclick="setLanguage('fr')">Français</button>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">QR</div>
+            <h1 id="title">تفعيل بطاقة QR</h1>
+            <p class="subtitle" id="subtitle">قم بمسح بطاقة QR وأدخل الرابط المطلوب</p>
+        </div>
+
+        <div id="attemptsInfo" class="attempts-info" style="display: none;">
+            <span id="attemptsText">المحاولات المتبقية: 10/10</span>
+        </div>
+
+        <div id="message"></div>
+
+        <form id="activationForm">
+            <div class="form-group">
+                <label for="qrCode" id="qrLabel">كود البطاقة</label>
+                <input type="text" id="qrCode" name="qrCode" readonly placeholder="اضغط على زر المسح لقراءة QR Code">
+                <button type="button" class="scan-btn" id="scanBtn" onclick="startQRScan()">
+                    <span id="scanBtnText">📷 مسح QR Code</span>
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label for="destinationUrl" id="urlLabel">الرابط المطلوب</label>
+                <input type="url" id="destinationUrl" name="destinationUrl" placeholder="https://example.com" required>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <span id="btnText">تفعيل البطاقة</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- ماسح QR Code -->
+    <div class="qr-scanner" id="qrScanner">
+        <div class="scanner-container">
+            <h3 id="scannerTitle">مسح QR Code</h3>
+            <video class="scanner-video" id="scannerVideo" autoplay muted playsinline></video>
+            <div class="scanner-controls">
+                <button class="scanner-btn close-scanner" onclick="stopQRScan()" id="closeScannerBtn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مكتبة قراءة QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js"></script>
+
+    <script>
+        // ترجمات النصوص
+        const translations = {
+            ar: {
+                title: "تفعيل بطاقة QR",
+                subtitle: "قم بمسح بطاقة QR وأدخل الرابط المطلوب",
+                qrLabel: "كود البطاقة",
+                qrPlaceholder: "اضغط على زر المسح لقراءة QR Code",
+                urlLabel: "الرابط المطلوب",
+                urlPlaceholder: "https://example.com",
+                btnText: "تفعيل البطاقة",
+                btnLoading: "جاري التفعيل...",
+                scanBtnText: "📷 مسح QR Code",
+                scanBtnScanning: "🔍 جاري المسح...",
+                scannerTitle: "مسح QR Code",
+                closeScannerBtn: "إغلاق",
+                successMsg: "تم تفعيل البطاقة بنجاح!",
+                attemptsText: "المحاولات المتبقية:",
+                errors: {
+                    invalidCode: "كود البطاقة غير صحيح (3-25 حرف، أرقام وحروف فقط)",
+                    invalidUrl: "الرجاء إدخال رابط صحيح",
+                    maxAttempts: "تم تجاوز الحد الأقصى للمحاولات. حاول مرة أخرى بعد 8 ساعات",
+                    networkError: "خطأ في الاتصال. حاول مرة أخرى",
+                    cameraError: "لا يمكن الوصول إلى الكاميرا",
+                    noQRFound: "لم يتم العثور على QR Code صحيح"
+                }
+            },
+            en: {
+                title: "QR Card Activation",
+                subtitle: "Scan your QR card and enter the destination link",
+                qrLabel: "Card Code",
+                qrPlaceholder: "Press scan button to read QR Code",
+                urlLabel: "Destination URL",
+                urlPlaceholder: "https://example.com",
+                btnText: "Activate Card",
+                btnLoading: "Activating...",
+                scanBtnText: "📷 Scan QR Code",
+                scanBtnScanning: "🔍 Scanning...",
+                scannerTitle: "Scan QR Code",
+                closeScannerBtn: "Close",
+                successMsg: "Card activated successfully!",
+                attemptsText: "Remaining attempts:",
+                errors: {
+                    invalidCode: "Invalid card code (3-25 characters, letters and numbers only)",
+                    invalidUrl: "Please enter a valid URL",
+                    maxAttempts: "Maximum attempts exceeded. Try again in 8 hours",
+                    networkError: "Connection error. Please try again",
+                    cameraError: "Cannot access camera",
+                    noQRFound: "No valid QR Code found"
+                }
+            },
+            fr: {
+                title: "Activation de la carte QR",
+                subtitle: "Scannez votre carte QR et entrez le lien de destination",
+                qrLabel: "Code de la carte",
+                qrPlaceholder: "Appuyez sur le bouton de scan pour lire le QR Code",
+                urlLabel: "URL de destination",
+                urlPlaceholder: "https://example.com",
+                btnText: "Activer la carte",
+                btnLoading: "Activation en cours...",
+                scanBtnText: "📷 Scanner QR Code",
+                scanBtnScanning: "🔍 Scan en cours...",
+                scannerTitle: "Scanner QR Code",
+                closeScannerBtn: "Fermer",
+                successMsg: "Carte activée avec succès!",
+                attemptsText: "Tentatives restantes:",
+                errors: {
+                    invalidCode: "Code de carte invalide (3-25 caractères, lettres et chiffres uniquement)",
+                    invalidUrl: "Veuillez entrer une URL valide",
+                    maxAttempts: "Nombre maximum de tentatives dépassé. Réessayez dans 8 heures",
+                    networkError: "Erreur de connexion. Veuillez réessayer",
+                    cameraError: "Impossible d'accéder à la caméra",
+                    noQRFound: "Aucun QR Code valide trouvé"
+                }
+            }
+        };
+
+        let currentLang = 'fr'; // اللغة الافتراضية فرنسية
+        let attempts = 10;
+
+        // تحديد اللغة تلقائياً حسب الجهاز
+        function detectLanguage() {
+            const browserLang = navigator.language.toLowerCase();
+            if (browserLang.startsWith('ar')) {
+                currentLang = 'ar';
+                document.documentElement.setAttribute('dir', 'rtl');
+            } else if (browserLang.startsWith('en')) {
+                currentLang = 'en';
+                document.documentElement.setAttribute('dir', 'ltr');
+            } else {
+                currentLang = 'fr';
+                document.documentElement.setAttribute('dir', 'ltr');
+            }
+            updateLanguage();
+        }
+
+        // تحديث النصوص حسب اللغة
+        function updateLanguage() {
+            const t = translations[currentLang];
+            document.getElementById('title').textContent = t.title;
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('qrLabel').textContent = t.qrLabel;
+            document.getElementById('qrCode').placeholder = t.qrPlaceholder;
+            document.getElementById('urlLabel').textContent = t.urlLabel;
+            document.getElementById('destinationUrl').placeholder = t.urlPlaceholder;
+            document.getElementById('btnText').textContent = t.btnText;
+            document.getElementById('scanBtnText').textContent = t.scanBtnText;
+            document.getElementById('scannerTitle').textContent = t.scannerTitle;
+            document.getElementById('closeScannerBtn').textContent = t.closeScannerBtn;
+            
+            // تحديث الأزرار
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="setLanguage('${currentLang}')"]`).classList.add('active');
+            
+            updateAttemptsDisplay();
+        }
+
+        // تغيير اللغة
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute('lang', lang);
+            updateLanguage();
+        }
+
+        // تحديث عرض المحاولات
+        function updateAttemptsDisplay() {
+            const t = translations[currentLang];
+            const attemptsInfo = document.getElementById('attemptsInfo');
+            const attemptsText = document.getElementById('attemptsText');
+            
+            if (attempts < 10) {
+                attemptsInfo.style.display = 'block';
+                attemptsText.textContent = `${t.attemptsText} ${attempts}/10`;
+            } else {
+                attemptsInfo.style.display = 'none';
+            }
+        }
+
+        // استخراج الكود من الرابط
+        function getCodeFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('code') || '';
+        }
+
+        // التحقق من صحة الكود
+        function validateCode(code) {
+            const codeRegex = /^[a-zA-Z0-9]{3,25}$/;
+            return codeRegex.test(code);
+        }
+
+        // التحقق من صحة الرابط
+        function validateUrl(url) {
+            try {
+                new URL(url);
+                return url.startsWith('http://') || url.startsWith('https://');
+            } catch {
+                return false;
+            }
+        }
+
+        // عرض الرسائل
+        function showMessage(message, type = 'error') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // متغيرات ماسح QR
+        let qrScanner = null;
+        let videoStream = null;
+
+        // بدء مسح QR
+        async function startQRScan() {
+            const t = translations[currentLang];
+            const scanBtn = document.getElementById('scanBtn');
+            const scanBtnText = document.getElementById('scanBtnText');
+            const qrScannerDiv = document.getElementById('qrScanner');
+            const video = document.getElementById('scannerVideo');
+
+            try {
+                // طلب إذن الكاميرا
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } // الكاميرا الخلفية للهواتف
+                });
+                
+                video.srcObject = videoStream;
+                qrScannerDiv.style.display = 'flex';
+                
+                scanBtn.disabled = true;
+                scanBtnText.textContent = t.scanBtnScanning;
+
+                // إنشاء ماسح QR
+                qrScanner = new QrScanner(video, (result) => {
+                    // استخراج الكود من الرابط
+                    let code = result.data;
+                    
+                    // إذا كان النتيجة رابط كامل، استخرج الكود منه
+                    if (code.includes('/')) {
+                        code = code.split('/').pop();
+                    }
+                    
+                    // التحقق من صحة الكود
+                    if (validateCode(code)) {
+                        document.getElementById('qrCode').value = code;
+                        stopQRScan();
+                        showMessage('تم مسح QR Code بنجاح!', 'success');
+                    } else {
+                        showMessage(t.errors.noQRFound, 'error');
+                    }
+                }, {
+                    highlightScanRegion: true,
+                    highlightCodeOutline: true,
+                });
+
+                qrScanner.start();
+
+            } catch (error) {
+                console.error('خطأ في الكاميرا:', error);
+                showMessage(t.errors.cameraError, 'error');
+                scanBtn.disabled = false;
+                scanBtnText.textContent = t.scanBtnText;
+            }
+        }
+
+        // إيقاف مسح QR
+        function stopQRScan() {
+            const t = translations[currentLang];
+            const scanBtn = document.getElementById('scanBtn');
+            const scanBtnText = document.getElementById('scanBtnText');
+            const qrScannerDiv = document.getElementById('qrScanner');
+
+            if (qrScanner) {
+                qrScanner.stop();
+                qrScanner.destroy();
+                qrScanner = null;
+            }
+
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            }
+
+            qrScannerDiv.style.display = 'none';
+            scanBtn.disabled = false;
+            scanBtnText.textContent = t.scanBtnText;
+        }
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            const t = translations[currentLang];
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const qrCode = document.getElementById('qrCode').value.trim();
+            const destinationUrl = document.getElementById('destinationUrl').value.trim();
+
+            // التحقق من المحاولات
+            if (attempts <= 0) {
+                showMessage(t.errors.maxAttempts, 'error');
+                return;
+            }
+
+            // التحقق من البيانات
+            if (!validateCode(qrCode)) {
+                showMessage(t.errors.invalidCode, 'error');
+                return;
+            }
+
+            if (!validateUrl(destinationUrl)) {
+                showMessage(t.errors.invalidUrl, 'error');
+                return;
+            }
+
+            // تعطيل الزر وإظهار التحميل
+            submitBtn.disabled = true;
+            btnText.innerHTML = `${t.btnLoading} <span class="loading"></span>`;
+
+            try {
+                // هنا سيتم إضافة الكود للاتصال بـ Supabase لاحقاً
+                // محاكاة العملية للآن
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                showMessage(t.successMsg, 'success');
+                attempts--;
+                updateAttemptsDisplay();
+                
+                // إعادة تعيين النموذج
+                document.getElementById('destinationUrl').value = '';
+                
+            } catch (error) {
+                showMessage(t.errors.networkError, 'error');
+                attempts--;
+                updateAttemptsDisplay();
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = t.btnText;
+            }
+        }
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            detectLanguage();
+            
+            const codeFromUrl = getCodeFromUrl();
+            if (codeFromUrl) {
+                document.getElementById('qrCode').value = codeFromUrl;
+            }
+            
+            // ربط النموذج
+            document.getElementById('activationForm').addEventListener('submit', handleSubmit);
+            
+            // السماح بتعديل حقل الكود إذا لم يكن هناك كود في الرابط
+            if (!codeFromUrl) {
+                document.getElementById('qrCode').removeAttribute('readonly');
+            }
+        });
+
+        // محاكاة مسح QR (للاختبار)
+        function simulateQRScan() {
+            const testCode = 'Av7Hd7588Bdh8885vdb';
+            document.getElementById('qrCode').value = testCode;
+            document.getElementById('qrCode').setAttribute('readonly', true);
+        }
+
+        // إضافة زر اختبار (مؤقت للتطوير)
+        if (window.location.hostname === 'localhost' || window.location.hostname.includes('codespaces')) {
+            const testBtn = document.createElement('button');
+            testBtn.textContent = 'Test QR Scan';
+            testBtn.style.position = 'fixed';
+            testBtn.style.bottom = '20px';
+            testBtn.style.left = '20px';
+            testBtn.style.padding = '10px';
+            testBtn.style.background = '#28a745';
+            testBtn.style.color = 'white';
+            testBtn.style.border = 'none';
+            testBtn.style.borderRadius = '5px';
+            testBtn.onclick = simulateQRScan;
+            document.body.appendChild(testBtn);
+        }
+    </script>
+</body>
+</html>
