@@ -12,13 +12,12 @@ exports.handler = async (event, context) => {
         
         console.log('Processing redirect for code:', shortCode);
         console.log('Full path:', event.path);
-        console.log('Event:', JSON.stringify(event, null, 2));
 
         if (!shortCode || shortCode.length < 3) {
             console.log('Invalid short code length');
             return {
                 statusCode: 404,
-                body: 'Short code not valid'
+                body: 'Short code invalid'
             };
         }
 
@@ -33,7 +32,7 @@ exports.handler = async (event, context) => {
             console.log('Database error:', error);
             return {
                 statusCode: 404,
-                body: Link not found: ${error.message}
+                body: 'Link not found - ' + error.message
             };
         }
 
@@ -71,7 +70,7 @@ exports.handler = async (event, context) => {
         console.error('Redirect function error:', error);
         return {
             statusCode: 500,
-            body: Server error: ${error.message}
+            body: 'Server error: ' + error.message
         };
     }
 };
