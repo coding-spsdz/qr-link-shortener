@@ -97,9 +97,9 @@ exports.handler = async (event, context) => {
         const path = event.path.replace('/.netlify/functions/links', '');
         const method = event.httpMethod;
 
-// GET: جلب رابط أو إعادة توجيه
+        // GET: جلب رابط أو إعادة توجيه
         if (method === 'GET') {
-            const shortCode = path.substring(1) || event.queryStringParameters?.shortCode;
+            const shortCode = path.substring(1); // إزالة الـ /
 
             if (!shortCode) {
                 return {
@@ -132,10 +132,10 @@ exports.handler = async (event, context) => {
 
             // إعادة توجيه
             return {
-                statusCode: 301,
+                statusCode: 302,
                 headers: {
-                    'Location': link.destination_url,
-                    'Cache-Control': 'no-cache'
+                    ...headers,
+                    'Location': link.destination_url
                 },
                 body: ''
             };
