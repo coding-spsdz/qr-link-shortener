@@ -668,27 +668,101 @@
             }
         }
 
-        // إضافة استدعاء loadRemainingAttempts في تهيئة الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-    detectLanguage();
-    loadRemainingAttempts(); // إضافة هذا السطر
-    
-    const codeFromUrl = getCodeFromUrl();
-    if (codeFromUrl) {
-        document.getElementById('qrCode').value = codeFromUrl;
-    }
-    
-    document.getElementById('activationForm').addEventListener('submit', handleSubmit);
-    
-    if (!codeFromUrl) {
-        document.getElementById('qrCode').removeAttribute('readonly');
-    }
-});
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            detectLanguage();
+            loadRemainingAttempts(); // هذا السطر الجديد
+            
+            const codeFromUrl = getCodeFromUrl();
+            if (codeFromUrl && validateCode(codeFromUrl)) {
+                document.getElementById('qrCode').value = codeFromUrl;
+            }
+            
+            // ربط النموذج
+            document.getElementById('activationForm').addEventListener('submit', handleSubmit);
+        });
 
-        
+        // تحميل عدد المحاولات المتبقية عند فتح الصفحة
+        async function loadRemainingAttempts() {
+            try {
+                const response = await fetch('/.netlify/functions/attempts', {
+                    method: 'GET'
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    attempts = result.remaining || 10;
+                    updateAttemptsDisplay();
+                }
+            } catch (error) {
+                console.log('Could not load attempts info');
+            }
+        }
 
+        // النافذة المنبثقة للنجاح
+        function showSuccessPopup(actionText) {
+            const t = translations[currentLang];
+            
+            // إنشاء النافذة المنبثقة
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                z-index: 2000;
+                text-align: center;
+                max-width: 350px;
+                width: 90%;
+            `;
+            
+            popup.innerHTML = `
+                <div style="color: #28a745; font-size: 48px; margin-bottom: 15px;">✅</div>
+                <h3 style="color: #333; margin-bottom: 10px;">${actionText}</h3>
+                <p style="color: #666;">${t.successMsg}</p>
+                <button onclick="closeSuccessPopup()" style="
+                    margin-top: 20px;
+                    padding: 10px 20px;
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                ">موافق</button>
+            `;
+            
+            // الخلفية المظلمة
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1999;
+            `;
+            
+            overlay.id = 'successOverlay';
+            popup.id = 'successPopup';
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(popup);
+            
+            // إغلاق تلقائي بعد 5 ثوانٍ
+            setTimeout(closeSuccessPopup, 5000);
+        }
 
-        
+        function closeSuccessPopup() {
+            const popup = document.getElementById('successPopup');
+            const overlay = document.getElementById('successOverlay');
+            if (popup) popup.remove();
+            if (overlay) overlay.remove();
+        }
     </script>
 </body>
 </html>
