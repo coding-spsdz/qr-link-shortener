@@ -1,0 +1,24 @@
+[build]
+  publish = "."
+
+# إعادة توجيه الروابط المختصرة إلى API
+[[redirects]]
+  from = "/:shortCode"
+  to = "/.netlify/functions/links/:shortCode"
+  status = 200
+  conditions = {role = ["link"]}
+
+# إعادة توجيه API
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# معالجة الروابط غير الموجودة
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+[dev]
+  command = "npx http-server . -p 8888"
