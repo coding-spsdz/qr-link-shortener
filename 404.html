@@ -134,7 +134,10 @@
 
     <script>
         // استخراج الكود من الرابط
-        const pathCode = window.location.pathname.split('/').pop();
+        // استخراج الكود من الرابط أو من query parameter
+const urlParams = new URLSearchParams(window.location.search);
+const pathCode = urlParams.get('code') || window.location.pathname.split('/').pop();
+
         
         // إذا كان هناك كود في الرابط، أضفه كمعامل في صفحة التفعيل
         const activateUrl = pathCode && pathCode.length >= 3 ? 
