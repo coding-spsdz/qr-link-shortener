@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الأدمن - QR Links</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-form {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: none;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .actions {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .links-table {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .table-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-box {
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            width: 250px;
+            font-size: 14px;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .link-code {
+            font-family: 'Courier New', monospace;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .link-url {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .visit-count {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .logout-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .action-buttons {
+                justify-content: center;
+            }
+            
+            .btn {
+                flex: 1;
+                text-align: center;
+            }
+            
+            .search-box {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- شاشة تسجيل الدخول -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-form">
+            <div class="logo-icon" style="margin: 0 auto 30px;">QR</div>
+            <h2 style="margin-bottom: 30px;">تسجيل دخول الأدمن</h2>
+            
+            <div id="loginMessage"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <input type="password" id="adminPassword" placeholder="كلمة المرور" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
+                    <span id="loginBtnText">دخول</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- لوحة تحكم الأدمن -->
+    <div class="admin-container" id="adminContainer">
+        <!-- الهيدر -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">QR</div>
+                <div>
+                    <h2>لوحة تحكم اختصار الروابط</h2>
+                    <p style="color: #666;">إدارة روابط QR</p>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">تسجيل خروج</button>
+        </div>
+
+        <!-- الإحصائيات -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalLinks">0</div>
+                <div>إجمالي الروابط</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalVisits">0</div>
+                <div>إجمالي الزيارات</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayLinks">0</div>
+                <div>روابط اليوم</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeLinks">0</div>
+                <div>الروابط النشطة</div>
+            </div>
+        </div>
+
+        <!-- الإجراءات -->
+        <div class="actions">
+            <h3 style="margin-bottom: 20px;">الإجراءات السريعة</h3>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="openAddLinkModal()">
+                    ➕ إضافة رابط جديد
+                </button>
+                <button class="btn btn-success" onclick="exportData()">
+                    📊 تصدير البيانات
+                </button>
+                <button class="btn btn-info" onclick="refreshData()">
+                    🔄 تحديث البيانات
+                </button>
+                <button class="btn btn-danger" onclick="cleanupOldData()">
+                    🗑️ تنظيف البيانات القديمة
+                </button>
+            </div>
+        </div>
+
+        <!-- رسائل التنبيه -->
+        <div id="alertContainer"></div>
+
+        <!-- جدول الروابط -->
+        <div class="links-table">
+            <div class="table-header">
+                <h3>الروابط المنشأة</h3>
+                <input type="text" class="search-box" id="searchBox" placeholder="البحث عن رابط...">
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table id="linksTable">
+                    <thead>
+                        <tr>
+                            <th>الكود المختصر</th>
+                            <th>الرابط الأصلي</th>
+                            <th>الزيارات</th>
+                            <th>تاريخ الإنشاء</th>
+                            <th>المنشئ</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="linksTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <div class="loading"></div>
+                                جاري تحميل البيانات...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج إضافة/تعديل رابط -->
+    <div class="modal" id="linkModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">إضافة رابط جديد</h3>
+            
+            <div id="modalMessage"></div>
+            
+            <form id="linkForm">
+                <div class="form-group">
+                    <label for="shortCode">الكود المختصر (3-25 حرف)</label>
+                    <input type="text" id="shortCode" name="shortCode" pattern="[a-zA-Z0-9]{3,25}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="destinationUrl">الرابط الأصلي</label>
+                    <input type="url" id="destinationUrl" name="destinationUrl" required>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeLinkModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" id="saveLinkBtn">
+                        <span id="saveBtnText">حفظ</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let linksData = [];
+        let isEditMode = false;
+        let editingLinkId = null;
+
+        // تسجيل الدخول
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('adminPassword').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            const loginMessage = document.getElementById('loginMessage');
+            
+            loginBtn.disabled = true;
+            loginBtnText.innerHTML = 'جاري التحقق... <span class="loading"></span>';
+            
+            try {
+                const response = await fetch('/.netlify/functions/admin-auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('adminContainer').style.display = 'block';
+                    loadDashboardData();
+                } else {
+                    showLoginMessage('كلمة مرور غير صحيحة', 'error');
+                }
+            } catch (error) {
+                showLoginMessage('خطأ في الاتصال', 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'دخول';
+            }
+        });
+
+        // عرض رسائل تسجيل الدخول
+        function showLoginMessage(message, type) {
+            const loginMessage = document.getElementById('loginMessage');
+            loginMessage.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                loginMessage.innerHTML = '';
+            }, 3000);
+        }
+
+        // تسجيل الخروج
+        function logout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('adminContainer').style.display = 'none';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        // التحقق من حالة تسجيل الدخول
+        function checkLoginStatus() {
+            if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('adminContainer').style.display = 'block';
+                loadDashboardData();
+            }
+        }
+
+        // تحميل بيانات لوحة التحكم
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/.netlify/functions/admin-links');
+                const result = await response.json();
+                
+                if (response.ok) {
+                    linksData = result.links || [];
+                    updateStats(result.stats || {});
+                    renderLinksTable();
+                } else {
+                    showAlert('خطأ في تحميل البيانات', 'error');
+                }
+            } catch (error) {
+                showAlert('خطأ في الاتصال', 'error');
+            }
+        }
+
+        // تحديث الإحصائيات
+        function updateStats(stats) {
+            document.getElementById('totalLinks').textContent = stats.totalLinks || 0;
+            document.getElementById('totalVisits').textContent = stats.totalVisits || 0;
+            document.getElementById('todayLinks').textContent = stats.todayLinks || 0;
+            document.getElementById('activeLinks').textContent = stats.activeLinks || 0;
+        }
+
+        // عرض جدول الروابط
+        function renderLinksTable() {
+            const tbody = document.getElementById('linksTableBody');
+            
+            if (linksData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">لا توجد روابط بعد</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = linksData.map(link => `
+                <tr>
+                    <td><span class="link-code">${link.short_code}</span></td>
+                    <td>
+                        <div class="link-url" title="${link.destination_url}">
+                            ${link.destination_url}
+                        </div>
+                    </td>
+                    <td><span class="visit-count">${link.visit_count}</span></td>
+                    <td>${formatDate(link.created_at)}</td>
+                    <td>${link.created_by === 'admin' ? 'أدمن' : 'عميل'}</td>
+                    <td>
+                        <button class="btn btn-info" onclick="editLink(${link.id})" style="font-size: 12px; padding: 6px 12px;">تعديل</button>
+                        <button class="btn btn-danger" onclick="deleteLink(${link.id})" style="font-size: 12px; padding: 6px 12px;">حذف</button>
+                        <button class="btn btn-success" onclick="copyLink('${link.short_code}')" style="font-size: 12px; padding: 6px 12px;">نسخ</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // فرمتة التاريخ
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-SA', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // فتح نموذج إضافة رابط
+        function openAddLinkModal() {
+            isEditMode = false;
+            editingLinkId = null;
+            document.getElementById('modalTitle').textContent = 'إضافة رابط جديد';
+            document.getElementById('shortCode').value = '';
+            document.getElementById('destinationUrl').value = '';
+            document.getElementById('saveBtnText').textContent = 'حفظ';
+            document.getElementById('modalMessage').innerHTML = '';
+            document.getElementById('linkModal').style.display = 'flex';
+        }
+
+        // تعديل رابط
+        function editLink(linkId) {
+            const link = linksData.find(l => l.id === linkId);
+            if (!link) return;
+            
+            isEditMode = true;
+            editingLinkId = linkId;
+            document.getElementById('modalTitle').textContent = 'تعديل رابط';
+            document.getElementById('shortCode').value = link.short_code;
+            document.getElementById('destinationUrl').value = link.destination_url;
+            document.getElementById('saveBtnText').textContent = 'تحديث';
+            document.getElementById('modalMessage').innerHTML = '';
+            document.getElementById('linkModal').style.display = 'flex';
+        }
+
+        // إغلاق النموذج
+        function closeLinkModal() {
+            document.getElementById('linkModal').style.display = 'none';
+        }
+
+        // حفظ الرابط
+        document.getElementById('linkForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const shortCode = document.getElementById('shortCode').value.trim();
+            const destinationUrl = document.getElementById('destinationUrl').value.trim();
+            const saveLinkBtn = document.getElementById('saveLinkBtn');
+            const saveBtnText = document.getElementById('saveBtnText');
+            
+            saveLinkBtn.disabled = true;
+            saveBtnText.innerHTML = 'جاري الحفظ... <span class="loading"></span>';
+            
+            try {
+                const url = isEditMode ? 
+                    `/.netlify/functions/admin-links?id=${editingLinkId}` : 
+                    '/.netlify/functions/admin-links';
+                
+                const response = await fetch(url, {
+                    method: isEditMode ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shortCode, destinationUrl })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(isEditMode ? 'تم تحديث الرابط بنجاح' : 'تم إنشاء الرابط بنجاح', 'success');
+                    closeLinkModal();
+                    loadDashboardData();
+                } else {
+                    showModalMessage(result.error || 'خطأ في العملية', 'error');
+                }
+            } catch (error) {
+                showModalMessage('خطأ في الاتصال', 'error');
+            } finally {
+                saveLinkBtn.disabled = false;
+                saveBtnText.textContent = isEditMode ? 'تحديث' : 'حفظ';
+            }
+        });
+
+        // حذف رابط
+        async function deleteLink(linkId) {
+            if (!confirm('هل أنت متأكد من حذف هذا الرابط؟')) return;
+            
+            try {
+                const response = await fetch(`/.netlify/functions/admin-links?id=${linkId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('تم حذف الرابط بنجاح', 'success');
+                    loadDashboardData();
+                } else {
+                    showAlert('خطأ في حذف الرابط', 'error');
+                }
+            } catch (error) {
+                showAlert('خطأ في الاتصال', 'error');
+            }
+        }
+
+        // نسخ الرابط
+        function copyLink(shortCode) {
+            const fullUrl = `${window.location.origin}/${shortCode}`;
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                showAlert('تم نسخ الرابط بنجاح', 'success');
+            });
+        }
+
+        // تصدير البيانات
+        function exportData() {
+            const csvContent = "data:text/csv;charset=utf-8," + 
+                "الكود المختصر,الرابط الأصلي,الزيارات,تاريخ الإنشاء,المنشئ\n" +
+                linksData.map(link => 
+                    `${link.short_code},${link.destination_url},${link.visit_count},${link.created_at},${link.created_by}`
+                ).join("\n");
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `qr_links_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // تحديث البيانات
+        function refreshData() {
+            loadDashboardData();
+            showAlert('تم تحديث البيانات', 'success');
+        }
+
+        // تنظيف البيانات القديمة
+        async function cleanupOldData() {
+            if (!confirm('هل تريد حذف الروابط التي لم تستخدم لأكثر من 6 أشهر؟')) return;
+            
+            try {
+                const response = await fetch('/.netlify/functions/admin-cleanup', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`تم حذف ${result.deletedCount} رابط قديم`, 'success');
+                    loadDashboardData();
+                } else {
+                    showAlert('خطأ في تنظيف البيانات', 'error');
+                }
+            } catch (error) {
+                showAlert('خطأ في الاتصال', 'error');
+            }
+        }
+
+        // البحث في الجدول
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredLinks = linksData.filter(link => 
+                link.short_code.toLowerCase().includes(searchTerm) ||
+                link.destination_url.toLowerCase().includes(searchTerm)
+            );
+            
+            const tbody = document.getElementById('linksTableBody');
+            tbody.innerHTML = filteredLinks.map(link => `
+                <tr>
+                    <td><span class="link-code">${link.short_code}</span></td>
+                    <td>
+                        <div class="link-url" title="${link.destination_url}">
+                            ${link.destination_url}
+                        </div>
+                    </td>
+                    <td><span class="visit-count">${link.visit_count}</span></td>
+                    <td>${formatDate(link.created_at)}</td>
+                    <td>${link.created_by === 'admin' ? 'أدمن' : 'عميل'}</td>
+                    <td>
+                        <button class="btn btn-info" onclick="editLink(${link.id})" style="font-size: 12px; padding: 6px 12px;">تعديل</button>
+                        <button class="btn btn-danger" onclick="deleteLink(${link.id})" style="font-size: 12px; padding: 6px 12px;">حذف</button>
+                        <button class="btn btn-success" onclick="copyLink('${link.short_code}')" style="font-size: 12px; padding: 6px 12px;">نسخ</button>
+                    </td>
+                </tr>
+            `).join('');
+        });
+
+        // عرض التنبيهات
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // عرض رسائل النموذج
+        function showModalMessage(message, type) {
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+
+        // التهيئة
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            
+            // إغلاق النموذج عند النقر خارجه
+            document.getElementById('linkModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeLinkModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
