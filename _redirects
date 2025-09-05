@@ -1,0 +1,12 @@
+# API endpoints أولاً
+/api/*  /.netlify/functions/:splat  200
+
+# الصفحات الثابتة
+/activate  /activate.html  200
+/admin  /admin.html  200
+
+# الروابط المختصرة - يجب أن تكون قبل catch-all
+/:shortCode  /.netlify/functions/redirect/:shortCode  200
+
+# Catch-all للصفحات غير الموجودة
+/*  /404.html  404
