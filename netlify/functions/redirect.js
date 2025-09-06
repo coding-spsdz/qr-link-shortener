@@ -8,7 +8,7 @@ exports.handler = async (event, context) => {
     try {
         const shortCode = event.path.split('/').pop();
         
-        if (!shortCode || shortCode.length < 3) {
+        if (shortCode.length < 3) {
             return {
                 statusCode: 302,
                 headers: { 'Location': '/activate' }
@@ -21,8 +21,14 @@ exports.handler = async (event, context) => {
             .eq('short_code', shortCode)
             .limit(1);
 
-        // إذا حدث خطأ أو لم يوجد نتائج
-        if (error  !data  data.length === 0) {
+        if (error) {
+            return {
+                statusCode: 302,
+                headers: { 'Location': '/activate' }
+            };
+        }
+
+        if (data.length === 0) {
             return {
                 statusCode: 302,
                 headers: { 'Location': '/activate' }
@@ -31,14 +37,13 @@ exports.handler = async (event, context) => {
 
         const link = data[0];
 
-        // تحديث عدد الزيارات (اختياري - لا نوقف العملية إذا فشل)
         try {
             await supabase
                 .from('links')
-                .update({ visit_count: (link.visit_count || 0) + 1 })
+                .update({ visit_count: link.visit_count + 1 })
                 .eq('id', link.id);
         } catch (updateError) {
-            // تجاهل خطأ التحديث
+            console.log('Update failed');
         }
 
         return {
