@@ -6,71 +6,43 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 exports.handler = async (event, context) => {
     try {
-        // استخراج الكود من المسار
-        const segments = event.path.split('/');
-        const shortCode = segments[segments.length - 1];
+        const shortCode = event.path.split('/').pop();
         
-        console.log('Processing redirect for code:', shortCode);
-        console.log('Full path:', event.path);
-
         if (!shortCode || shortCode.length < 3) {
-            console.log('Invalid short code length');
             return {
-                statusCode: 404,
-                body: 'Short code invalid'
+                statusCode: 302,
+                headers: { 'Location': '/activate' }
             };
         }
 
-        // البحث في قاعدة البيانات
-        const { data: link, error } = await supabase
+        const { data: links } = await supabase
             .from('links')
             .select('*')
-            .eq('short_code', shortCode)
-            .single();
+            .eq('short_code', shortCode);
 
-        if (error) {
-            console.log('Database error:', error);
+        if (!links || links.length === 0) {
             return {
-                statusCode: 404,
-                body: 'Link not found - ' + error.message
+                statusCode: 302,
+                headers: { 'Location': '/activate' }
             };
         }
 
-        if (!link) {
-            console.log('No link found for code:', shortCode);
-            return {
-                statusCode: 404,
-                body: 'Link not found'
-            };
-        }
+        const link = links[0];
 
-        console.log('Found link:', link);
-
-        // تحديث عدد الزيارات
-        const { error: updateError } = await supabase
+        await supabase
             .from('links')
-            .update({ 
-                visit_count: (link.visit_count || 0) + 1 
-            })
+            .update({ visit_count: (link.visit_count || 0) + 1 })
             .eq('id', link.id);
 
-        if (updateError) {
-            console.log('Error updating visit count:', updateError);
-        }
-
-        // إعادة التوجيه
         return {
             statusCode: 301,
-            headers: {
-                'Location': link.destination_url
-            }
+            headers: { 'Location': link.destination_url }
         };
 
     } catch (error) {
-        console.error('Redirect function error:', error);
         return {
-            statusCode: 500,
-            body: 'Server error: ' + error.message
+            statusCode: 302,
+            headers: { 'Location': '/activate' }
         };
     }
 };

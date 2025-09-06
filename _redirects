@@ -9,4 +9,4 @@
 /:shortCode  /.netlify/functions/redirect/:shortCode  200
 
 # Catch-all للصفحات غير الموجودة
-/*  /404.html  404
+/*  /activate  302
