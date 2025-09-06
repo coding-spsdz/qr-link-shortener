@@ -131,7 +131,7 @@ exports.handler = async (event, context) => {
                 .eq('id', link.id);
 
             // إعادة توجيه
-                                            return {
+               return {
                         statusCode: 302,
                         headers: {
                             'Location': '/activate'
