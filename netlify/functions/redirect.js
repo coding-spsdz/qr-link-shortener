@@ -26,16 +26,21 @@ exports.handler = async (event, context) => {
             .from('links')
             .select('*')
             .eq('short_code', shortCode)
-            .maybeSingle();
+            .single();
 
-        // إذا لم يوجد الرابط، توجيه لصفحة 404
-        if (!link || error) {
-            console.log('Link not found for code:', shortCode);
+        if (error) {
+            console.log('Database error:', error);
             return {
-                statusCode: 302,
-                headers: {
-                    'Location': /404.html?code=${shortCode}
-                }
+                statusCode: 404,
+                body: 'Link not found - ' + error.message
+            };
+        }
+
+        if (!link) {
+            console.log('No link found for code:', shortCode);
+            return {
+                statusCode: 404,
+                body: 'Link not found'
             };
         }
 
