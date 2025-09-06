@@ -15,24 +15,31 @@ exports.handler = async (event, context) => {
             };
         }
 
-        const { data: links } = await supabase
+        const { data, error } = await supabase
             .from('links')
-            .select('*')
-            .eq('short_code', shortCode);
+            .select('id, destination_url, visit_count')
+            .eq('short_code', shortCode)
+            .limit(1);
 
-        if (!links || links.length === 0) {
+        // إذا حدث خطأ أو لم يوجد نتائج
+        if (error  !data  data.length === 0) {
             return {
                 statusCode: 302,
                 headers: { 'Location': '/activate' }
             };
         }
 
-        const link = links[0];
+        const link = data[0];
 
-        await supabase
-            .from('links')
-            .update({ visit_count: (link.visit_count || 0) + 1 })
-            .eq('id', link.id);
+        // تحديث عدد الزيارات (اختياري - لا نوقف العملية إذا فشل)
+        try {
+            await supabase
+                .from('links')
+                .update({ visit_count: (link.visit_count || 0) + 1 })
+                .eq('id', link.id);
+        } catch (updateError) {
+            // تجاهل خطأ التحديث
+        }
 
         return {
             statusCode: 301,
