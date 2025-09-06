@@ -131,14 +131,13 @@ exports.handler = async (event, context) => {
                 .eq('id', link.id);
 
             // إعادة توجيه
-            return {
-                statusCode: 302,
-                headers: {
-                    ...headers,
-                    'Location': link.destination_url
-                },
-                body: ''
-            };
+                                return {
+                        statusCode: 302,
+                        headers: {
+                            'Location': `/404.html?code=${shortCode}`
+                        }
+                    };
+
         }
 
         // POST: إنشاء أو تحديث رابط (للعملاء)

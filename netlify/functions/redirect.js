@@ -13,64 +13,87 @@ exports.handler = async (event, context) => {
         console.log('Processing redirect for code:', shortCode);
         console.log('Full path:', event.path);
 
-        if (!shortCode || shortCode.length < 3) {
+        if (!shortCode  shortCode.length < 3  shortCode.length > 25) {
             console.log('Invalid short code length');
             return {
-                statusCode: 404,
-                body: 'Short code invalid'
+                statusCode: 302,
+                headers: {
+                    'Location': '/404.html'
+                }
+            };
+        }
+
+        // التحقق من صحة الكود (حروف وأرقام فقط)
+        const validCodePattern = /^[a-zA-Z0-9]+$/;
+        if (!validCodePattern.test(shortCode)) {
+            console.log('Invalid short code format');
+            return {
+                statusCode: 302,
+                headers: {
+                    'Location': '/404.html'
+                }
             };
         }
 
         // البحث في قاعدة البيانات
-        const { data: link, error } = await supabase
+        const { data: links, error } = await supabase
             .from('links')
             .select('*')
             .eq('short_code', shortCode)
-            .single();
+            .limit(1);
 
         if (error) {
             console.log('Database error:', error);
             return {
-                statusCode: 404,
-                body: 'Link not found - ' + error.message
+                statusCode: 302,
+                headers: {
+                    'Location': '/404.html?code=' + encodeURIComponent(shortCode)
+                }
             };
         }
 
-        if (!link) {
+        if (!links || links.length === 0) {
             console.log('No link found for code:', shortCode);
             return {
-                statusCode: 404,
-                body: 'Link not found'
+                statusCode: 302,
+                headers: {
+                    'Location': '/404.html?code=' + encodeURIComponent(shortCode)
+                }
             };
         }
 
-        console.log('Found link:', link);
+        const link = links[0];
+        console.log('Found link:', link.destination_url);
 
         // تحديث عدد الزيارات
-        const { error: updateError } = await supabase
-            .from('links')
-            .update({ 
-                visit_count: (link.visit_count || 0) + 1 
-            })
-            .eq('id', link.id);
-
-        if (updateError) {
+        try {
+            await supabase
+                .from('links')
+                .update({ 
+                    visit_count: (link.visit_count || 0) + 1 
+                })
+                .eq('id', link.id);
+        } catch (updateError) {
             console.log('Error updating visit count:', updateError);
+            // لا نوقف العملية لأجل خطأ في التحديث
         }
 
         // إعادة التوجيه
         return {
             statusCode: 301,
             headers: {
-                'Location': link.destination_url
+                'Location': link.destination_url,
+                'Cache-Control': 'no-cache'
             }
         };
 
     } catch (error) {
         console.error('Redirect function error:', error);
         return {
-            statusCode: 500,
-            body: 'Server error: ' + error.message
+            statusCode: 302,
+            headers: {
+                'Location': '/404.html'
+            }
         };
     }
 };
