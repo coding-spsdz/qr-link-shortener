@@ -24,7 +24,7 @@ exports.handler = async (event, context) => {
 
     try {
         const { password } = JSON.parse(event.body);
-        const adminPassword = process.env.ADMIN_PASSWORD || 'mohamed20055';
+        const adminPassword = process.env.ADMIN_PASSWORD || 'QRAdmin2025!';
         
         if (password === adminPassword) {
             return {
